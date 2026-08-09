@@ -185,9 +185,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const img = await loadImageFile(photoFile);
       // fit canvas to image but limit width for responsive layout
       const maxWidth = 900;
-      const scale = Math.min(1, maxWidth / img.width);
-      const cw = Math.round(img.width * scale);
-      const ch = Math.round(img.height * scale);
+      const previewScale = Math.min(1, maxWidth / img.width);
+      const cw = Math.round(img.width * previewScale);
+      const ch = Math.round(img.height * previewScale);
       previewCanvas.width = cw;
       previewCanvas.height = ch;
       previewCtx.clearRect(0,0,cw,ch);
@@ -204,6 +204,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const offsetX = parseFloat(offsetXInput.value || '0.5');
       const offsetY = parseFloat(offsetYInput.value || '0.5');
 
+      const previewFontSize = Math.round(fontSize * scaleValue * previewScale);
       watermarkPreview.style.display = 'none';
       watermarkPreview.innerHTML = '';
       watermarkPreview.style.opacity = opacity;
@@ -211,7 +212,7 @@ document.addEventListener('DOMContentLoaded', () => {
         watermarkPreview.style.display = 'flex';
         watermarkPreview.style.width = 'auto';
         watermarkPreview.style.height = 'auto';
-        watermarkPreview.innerHTML = `<span style="color: ${color}; font-size: ${Math.round(fontSize * scaleValue)}px; opacity: 1;">${text}</span>`;
+        watermarkPreview.innerHTML = `<span style="color: ${color}; font-size: ${previewFontSize}px; opacity: 1;">${text}</span>`;
       }
 
       if (type === 'image') {
@@ -219,7 +220,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (wmFile) {
           watermarkPreview.style.display = 'flex';
           const url = URL.createObjectURL(wmFile);
-          watermarkPreview.innerHTML = `<img id="previewWatermarkImg" src="${url}" style="max-width: 200px; max-height: 200px; display:block;"/>`;
+          const wmImage = await loadImageFile(wmFile);
+          const wmWidth = Math.round(wmImage.width * 0.25 * scaleValue * previewScale);
+          const wmHeight = Math.round(wmImage.height * 0.25 * scaleValue * previewScale);
+          watermarkPreview.innerHTML = `<img id="previewWatermarkImg" src="${url}" style="width: ${wmWidth}px; height: ${wmHeight}px; display:block;"/>`;
         }
       }
 

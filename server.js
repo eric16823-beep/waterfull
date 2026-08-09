@@ -39,7 +39,7 @@ app.post('/upload', upload.fields([
     const text = opts.text || 'Sample Watermark';
     const color = opts.color || '#ffffff';
 
-    const img = sharp(photoBuf);
+    const img = sharp(photoBuf).rotate();
     const meta = await img.metadata();
     const width = meta.width || 800;
     const height = meta.height || 600;
