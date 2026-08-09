@@ -104,7 +104,8 @@ app.post('/upload', upload.fields([
 </svg>`;
     }
 
-    const resultBuf = await img.composite([{ input: Buffer.from(overlaySvg), gravity: positionToGravity(position) }]).toBuffer();
+    const overlayBuffer = await sharp(Buffer.from(overlaySvg)).png().resize(width, height).toBuffer();
+    const resultBuf = await img.composite([{ input: overlayBuffer, left: 0, top: 0 }]).toBuffer();
 
     res.set('Content-Type', 'image/png');
     res.set('Content-Disposition', 'attachment; filename="watermarked.png"');

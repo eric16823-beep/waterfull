@@ -379,7 +379,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     try {
       const res = await fetch('/upload', { method: 'POST', body: fd });
-      if (!res.ok) throw new Error('Upload failed');
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || `Upload failed (${res.status})`);
+      }
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -391,7 +394,7 @@ document.addEventListener('DOMContentLoaded', () => {
       result.innerHTML = `<p>完成，圖片將自動下載。若未下載請點擊下面圖片：</p><a href="${url}" download="watermarked.png"><img src="${url}" alt="result" style="max-width:100%"/></a>`;
     } catch (err) {
       console.error(err);
-      result.textContent = '處理錯誤';
+      result.textContent = `處理錯誤：${err.message}`;
     }
   });
 
