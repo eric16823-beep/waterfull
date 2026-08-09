@@ -127,7 +127,7 @@ app.post('/upload', upload.fields([
       const anchor = getTextAnchor(position);
       const textRotation = rotate;
       const transform = textRotation ? `transform="rotate(${textRotation}, ${x}, ${y})"` : '';
-      const scaledFontSize = Math.max(1, Math.round(fontSize * scale));
+      const scaledFontSize = Math.max(1, Math.round(fontSize * scale * 3));
       const escapedText = escapeSvgText(text);
       overlaySvg = `<?xml version="1.0" encoding="utf-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">

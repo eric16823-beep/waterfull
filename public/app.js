@@ -41,6 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
   };
   const previewCtx = previewCanvas.getContext && previewCanvas.getContext('2d');
   const defaultSettings = { scale: '1', rotate: '0', opacity: '0.5' };
+  const FONT_SIZE_MULTIPLIER = 3;
   const translations = {
     zh: {
       appTitle: 'Waterfull - 圖片浮水印',
@@ -255,7 +256,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       previewCtx.save();
       if (type === 'text' && text) {
-        const previewFontSize = Math.round(fontSize * scaleValue * previewScale);
+        const previewFontSize = Math.round(fontSize * scaleValue * previewScale * FONT_SIZE_MULTIPLIER);
         const fill = color;
         const shadowColor = `rgba(0,0,0,${Math.min(0.7, opacity + 0.2)})`;
         previewCtx.font = `${previewFontSize}px Arial, Helvetica, sans-serif`;
