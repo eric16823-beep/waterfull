@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Waterfull - 圖片浮水印</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <main>
+    <div class="top-bar">
+      <h1 id="appTitle">Waterfull - 圖片浮水印</h1>
+      <div id="languageSwitcher">
+        <button type="button" class="lang-btn selected" data-lang="zh">中文</button>
+        <button type="button" class="lang-btn" data-lang="en">English</button>
+        <button type="button" class="lang-btn" data-lang="ja">日本語</button>
+        <button type="button" class="lang-btn" data-lang="es">Español</button>
+        <button type="button" class="lang-btn" data-lang="ko">한국어</button>
+      </div>
+    </div>
+    <form id="form">
+      <label><span id="uploadPhoto">上傳照片 (必填)</span>
+        <input type="file" name="photo" accept="image/*" required />
+      </label>
+
+      <fieldset>
+        <legend id="watermarkTypeLegend">浮水印類型</legend>
+        <label><input type="radio" name="watermarkType" value="text" checked /> <span id="watermarkTypeText">文字</span></label>
+        <label><input type="radio" name="watermarkType" value="image" /> <span id="watermarkTypeImage">圖片</span></label>
+      </fieldset>
+
+      <div id="watermarkOptions">
+        <div id="textOptions">
+          <label><span id="watermarkTextLabel">輸入浮水印文字</span>
+            <input type="text" id="watermarkTextInput" name="text" value="Sample Watermark" placeholder="請輸入浮水印文字" required />
+          </label>
+          <label><span id="fontSizeLabel">字型大小</span>
+            <input type="number" name="fontSize" value="48" min="8" max="240" />
+          </label>
+          <div class="color-row">
+            <label id="colorLabel">字體顏色</label>
+            <div class="color-swatch-group" role="group" aria-label="字體顏色選擇">
+              <button type="button" class="color-swatch selected" data-color="#ffffff" style="background:#ffffff"></button>
+              <button type="button" class="color-swatch" data-color="#000000" style="background:#000000"></button>
+              <button type="button" class="color-swatch" data-color="#ff0000" style="background:#ff0000"></button>
+              <button type="button" class="color-swatch" data-color="#00ff00" style="background:#00ff00"></button>
+              <button type="button" class="color-swatch" data-color="#0000ff" style="background:#0000ff"></button>
+              <button type="button" class="color-swatch" data-color="#ffff00" style="background:#ffff00"></button>
+              <button type="button" class="color-swatch" data-color="#ff00ff" style="background:#ff00ff"></button>
+              <button type="button" class="color-swatch" data-color="#00ffff" style="background:#00ffff"></button>
+              <button type="button" class="color-swatch" data-color="#ffa500" style="background:#ffa500"></button>
+              <button type="button" class="color-swatch" data-color="#800080" style="background:#800080"></button>
+            </div>
+          </div>
+          <input type="hidden" name="color" value="#ffffff" />
+          <input type="hidden" name="offsetX" value="0.5" />
+          <input type="hidden" name="offsetY" value="0.5" />
+          <div class="control-row">
+            <div class="control-group">
+              <label>大小 <span id="scaleVal">1.0</span></label>
+              <div class="control-with-buttons">
+                <button type="button" class="small-btn" id="scaleDec">-</button>
+                <input type="range" name="scale" min="0.5" max="2" step="0.05" value="1" id="scale" />
+                <button type="button" class="small-btn" id="scaleInc">+</button>
+              </div>
+            </div>
+            <div class="control-group">
+              <label>旋轉 <span id="rotateVal">0</span>°</label>
+              <div class="control-with-buttons">
+                <button type="button" class="small-btn" id="rotateDec">-</button>
+                <input type="range" name="rotate" min="-180" max="180" step="1" value="0" id="rotate" />
+                <button type="button" class="small-btn" id="rotateInc">+</button>
+              </div>
+            </div>
+            <div class="control-group">
+              <label id="positionLabel">位置</label>
+              <select id="positionSelect" name="position">
+                <option value="top-left" data-i18n="position-top-left">左上</option>
+                <option value="top-right" data-i18n="position-top-right">右上</option>
+                <option value="center" selected data-i18n="position-center">置中</option>
+                <option value="bottom-left" data-i18n="position-bottom-left">左下</option>
+                <option value="bottom-right" data-i18n="position-bottom-right">右下</option>
+                <option value="diagonal-left" data-i18n="position-diagonal-left">左斜</option>
+                <option value="diagonal-right" data-i18n="position-diagonal-right">右斜</option>
+              </select>
+            </div>
+            <div class="control-group">
+              <label><span id="opacityLabel">透明度</span> <span id="opVal">0.5</span></label>
+              <input type="range" name="opacity" min="0" max="1" step="0.01" value="0.5" id="opacity" />
+            </div>
+            <div class="control-group reset-group">
+              <label>&nbsp;</label>
+              <button type="button" id="resetButton">重置</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="imageOptions" style="display:none;">
+          <label><span id="uploadWatermarkImageLabel">上傳浮水印圖 (PNG 建議)</span>
+            <input type="file" name="watermarkImage" accept="image/*" />
+          </label>
+        </div>
+      </div>
+
+      <button type="submit" id="submitButton">產生並下載</button>
+    </form>
+
+    <div id="previewWrap">
+      <h2 id="previewHeading">預覽</h2>
+      <div id="previewContainer">
+        <canvas id="previewCanvas"></canvas>
+        <div id="watermarkPreview" class="watermark-preview"></div>
+      </div>
+      <p id="previewHint">拖曳浮水印可調整位置；使用大小與旋轉滑桿。</p>
+      <div id="result"></div>
+    </div>
+    <footer class="site-footer">
+      <a href="/privacy.html">Privacy Policy</a>
+    </footer>
+  </main>
+  <script src="/app.js"></script>
+</body>
+</html>
