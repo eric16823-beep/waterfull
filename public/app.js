@@ -357,8 +357,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   form.elements['position'].addEventListener('change', () => { setPositionDefaults(form.elements['position'].value); updatePreview(); });
   op.addEventListener('input', () => { opVal.textContent = op.value; updatePreview(); });
+  op.addEventListener('change', () => { opVal.textContent = op.value; updatePreview(); });
   scale.addEventListener('input', () => { scaleVal.textContent = scale.value; updatePreview(); });
+  scale.addEventListener('change', () => { scaleVal.textContent = scale.value; updatePreview(); });
   rotate.addEventListener('input', () => { rotateVal.textContent = rotate.value; updatePreview(); });
+  rotate.addEventListener('change', () => { rotateVal.textContent = rotate.value; updatePreview(); });
   scaleDec.addEventListener('click', () => { scale.value = Math.max(parseFloat(scale.min), parseFloat(scale.value) - parseFloat(scale.step)); scaleVal.textContent = scale.value; updatePreview(); });
   scaleInc.addEventListener('click', () => { scale.value = Math.min(parseFloat(scale.max), parseFloat(scale.value) + parseFloat(scale.step)); scaleVal.textContent = scale.value; updatePreview(); });
   rotateDec.addEventListener('click', () => { rotate.value = Math.max(parseFloat(rotate.min), parseFloat(rotate.value) - parseFloat(rotate.step)); rotateVal.textContent = rotate.value; updatePreview(); });
@@ -436,7 +439,10 @@ document.addEventListener('DOMContentLoaded', () => {
   // update preview on many input changes
   ['text','fontSize','position','opacity','scale','rotate'].forEach(name => {
     const el = form.elements[name];
-    if (el) el.addEventListener('input', updatePreview);
+    if (el) {
+      el.addEventListener('input', updatePreview);
+      el.addEventListener('change', updatePreview);
+    }
   });
   colorSwatches.forEach((swatch) => {
     swatch.addEventListener('click', () => {
