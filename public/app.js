@@ -204,11 +204,12 @@ document.addEventListener('DOMContentLoaded', () => {
       const offsetX = parseFloat(offsetXInput.value || '0.5');
       const offsetY = parseFloat(offsetYInput.value || '0.5');
 
-      const previewFontSize = Math.round(fontSize * scaleValue * previewScale);
+      const previewFontSize = Math.round(fontSize * previewScale);
       watermarkPreview.style.display = 'none';
       watermarkPreview.innerHTML = '';
       watermarkPreview.style.opacity = opacity;
       if (type === 'text' && text) {
+        const previewFontSize = Math.round(fontSize * scaleValue * previewScale);
         watermarkPreview.style.display = 'flex';
         watermarkPreview.style.width = 'auto';
         watermarkPreview.style.height = 'auto';
@@ -229,7 +230,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (watermarkPreview.style.display !== 'none') {
         watermarkPreview.style.left = `${offsetX * 100}%`;
         watermarkPreview.style.top = `${offsetY * 100}%`;
-        watermarkPreview.style.transform = `translate(-50%, -50%) rotate(${rotateValue}deg) scale(${scaleValue})`;
+        watermarkPreview.style.transform = `translate(-50%, -50%) rotate(${rotateValue}deg)`;
       }
     } catch (err) {
       console.error('Preview error', err);
