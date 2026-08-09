@@ -172,6 +172,50 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  function getPreviewPosition(position, cw, ch, offsetX, offsetY, itemWidth = 0, itemHeight = 0, forImage = false) {
+    const marginX = 40;
+    const marginY = 60;
+    let x = Math.round(cw * offsetX);
+    let y = Math.round(ch * offsetY);
+
+    if (position === 'top-left') {
+      x = forImage ? Math.round(marginX + itemWidth / 2) : marginX;
+      y = forImage ? Math.round(marginY + itemHeight / 2) : marginY;
+    }
+    if (position === 'top-right') {
+      x = forImage ? Math.round(cw - marginX - itemWidth / 2) : Math.round(cw - marginX);
+      y = forImage ? Math.round(marginY + itemHeight / 2) : marginY;
+    }
+    if (position === 'center') {
+      x = Math.round(cw / 2);
+      y = Math.round(ch / 2);
+    }
+    if (position === 'bottom-left') {
+      x = forImage ? Math.round(marginX + itemWidth / 2) : marginX;
+      y = forImage ? Math.round(ch - marginY - itemHeight / 2) : Math.round(ch - marginY);
+    }
+    if (position === 'bottom-right') {
+      x = forImage ? Math.round(cw - marginX - itemWidth / 2) : Math.round(cw - marginX);
+      y = forImage ? Math.round(ch - marginY - itemHeight / 2) : Math.round(ch - marginY);
+    }
+    return { x, y };
+  }
+
+  function getTextAlign(position) {
+    switch (position) {
+      case 'top-left':
+      case 'bottom-left':
+      case 'diagonal-left':
+        return 'left';
+      case 'top-right':
+      case 'bottom-right':
+      case 'diagonal-right':
+        return 'right';
+      default:
+        return 'center';
+    }
+  }
+
   async function updatePreview() {
     if (!previewCtx) return;
     const photoFile = form.elements['photo'].files[0];
@@ -204,32 +248,66 @@ document.addEventListener('DOMContentLoaded', () => {
       const offsetX = parseFloat(offsetXInput.value || '0.5');
       const offsetY = parseFloat(offsetYInput.value || '0.5');
 
-      const previewFontSize = Math.round(fontSize * previewScale);
       watermarkPreview.style.display = 'none';
       watermarkPreview.innerHTML = '';
-      watermarkPreview.style.opacity = opacity;
+      watermarkPreview.style.opacity = 1;
+      watermarkPreview.style.background = 'transparent';
+
+      previewCtx.save();
       if (type === 'text' && text) {
         const previewFontSize = Math.round(fontSize * scaleValue * previewScale);
+        const fill = color;
+        const shadowColor = `rgba(0,0,0,${Math.min(0.7, opacity + 0.2)})`;
+        previewCtx.font = `${previewFontSize}px Arial, Helvetica, sans-serif`;
+        previewCtx.textBaseline = 'middle';
+        const textWidth = previewCtx.measureText(text).width;
+        const { x, y } = getPreviewPosition(position, cw, ch, offsetX, offsetY, textWidth, previewFontSize, false);
+        const textAlign = getTextAlign(position);
+        previewCtx.fillStyle = shadowColor;
+        previewCtx.textAlign = textAlign;
+        previewCtx.translate(x, y);
+        previewCtx.rotate((rotateValue * Math.PI) / 180);
+        previewCtx.fillText(text, 0, 0);
+        previewCtx.fillStyle = fill;
+        previewCtx.fillText(text, 0, 0);
+        previewCtx.setTransform(1, 0, 0, 1, 0, 0);
         watermarkPreview.style.display = 'flex';
-        watermarkPreview.style.width = 'auto';
-        watermarkPreview.style.height = 'auto';
-        watermarkPreview.innerHTML = `<span style="color: ${color}; font-size: ${previewFontSize}px; opacity: 1;">${text}</span>`;
+        watermarkPreview.style.width = `${Math.max(textWidth, previewFontSize)}px`;
+        watermarkPreview.style.height = `${previewFontSize}px`;
       }
+
+      let overlayX = Math.round(cw * offsetX);
+      let overlayY = Math.round(ch * offsetY);
+      let overlayWidth = 0;
+      let overlayHeight = 0;
 
       if (type === 'image') {
         const wmFile = form.elements['watermarkImage'].files[0];
         if (wmFile) {
-          watermarkPreview.style.display = 'flex';
-          const url = URL.createObjectURL(wmFile);
+          const wmImage = await loadImageFile(wmFile);
           const wmWidth = Math.round(cw * 0.25 * scaleValue);
           const wmHeight = Math.round(ch * 0.25 * scaleValue);
-          watermarkPreview.innerHTML = `<img id="previewWatermarkImg" src="${url}" style="width: ${wmWidth}px; height: ${wmHeight}px; display:block;"/>`;
+          const pos = getPreviewPosition(position, cw, ch, offsetX, offsetY, wmWidth, wmHeight, true);
+          overlayX = pos.x;
+          overlayY = pos.y;
+          overlayWidth = wmWidth;
+          overlayHeight = wmHeight;
+          previewCtx.save();
+          previewCtx.globalAlpha = opacity;
+          previewCtx.translate(overlayX, overlayY);
+          previewCtx.rotate((rotateValue * Math.PI) / 180);
+          previewCtx.drawImage(wmImage, -wmWidth / 2, -wmHeight / 2, wmWidth, wmHeight);
+          previewCtx.restore();
+          watermarkPreview.style.display = 'flex';
+          watermarkPreview.style.width = `${wmWidth}px`;
+          watermarkPreview.style.height = `${wmHeight}px`;
         }
       }
+      previewCtx.restore();
 
       if (watermarkPreview.style.display !== 'none') {
-        watermarkPreview.style.left = `${offsetX * 100}%`;
-        watermarkPreview.style.top = `${offsetY * 100}%`;
+        watermarkPreview.style.left = `${overlayX}px`;
+        watermarkPreview.style.top = `${overlayY}px`;
         watermarkPreview.style.transform = `translate(-50%, -50%) rotate(${rotateValue}deg)`;
       }
     } catch (err) {

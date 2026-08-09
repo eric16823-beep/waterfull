@@ -6,6 +6,61 @@ const path = require('path');
 const app = express();
 const upload = multer({ storage: multer.memoryStorage() });
 
+function clamp01(value) {
+  return Math.max(0, Math.min(1, parseFloat(value || '0')));
+}
+
+function getTextAnchor(position) {
+  switch (position) {
+    case 'top-left':
+    case 'bottom-left':
+    case 'diagonal-left':
+      return 'start';
+    case 'top-right':
+    case 'bottom-right':
+    case 'diagonal-right':
+      return 'end';
+    default:
+      return 'middle';
+  }
+}
+
+function escapeSvgText(text) {
+  return String(text).replace(/[&<>'"]/g, (char) => {
+    return {
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&apos;'
+    }[char];
+  });
+}
+
+function getWatermarkPosition(position, width, height, offsetX, offsetY, itemWidth = 0, itemHeight = 0) {
+  const marginX = 40;
+  const marginY = 60;
+  if (position === 'top-left') {
+    return { x: marginX, y: marginY };
+  }
+  if (position === 'top-right') {
+    return { x: Math.round(width - itemWidth - marginX), y: marginY };
+  }
+  if (position === 'center') {
+    return { x: Math.round(width / 2), y: Math.round(height / 2) };
+  }
+  if (position === 'bottom-left') {
+    return { x: marginX, y: Math.round(height - itemHeight - marginY) };
+  }
+  if (position === 'bottom-right') {
+    return { x: Math.round(width - itemWidth - marginX), y: Math.round(height - itemHeight - marginY) };
+  }
+  if (position === 'diagonal-left' || position === 'diagonal-right') {
+    return { x: Math.round(width * offsetX), y: Math.round(height * offsetY) };
+  }
+  return { x: Math.round(width * offsetX), y: Math.round(height * offsetY) };
+}
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 function positionToGravity(pos) {
@@ -47,62 +102,41 @@ app.post('/upload', upload.fields([
 
     let overlaySvg;
 
+    const offsetX = clamp01(opts.offsetX || '0.5');
+    const offsetY = clamp01(opts.offsetY || '0.5');
+
     if (type === 'image' && req.files.watermarkImage && req.files.watermarkImage[0]) {
       // embed watermark image into an SVG so we can set opacity, scale and rotation
       const wmBuf = req.files.watermarkImage[0].buffer;
       const wmBase64 = wmBuf.toString('base64');
       const wmWidth = Math.round(width * 0.25 * scale);
       const wmHeight = Math.round(height * 0.25 * scale);
-      let x = 0;
-      let y = 0;
-      let angle = rotate;
-      if (position === 'top-left') { x = 20; y = 20; }
-      if (position === 'top-right') { x = width - wmWidth - 20; y = 20; }
-      if (position === 'center') { x = Math.round((width - wmWidth) / 2); y = Math.round((height - wmHeight) / 2); }
-      if (position === 'bottom-left') { x = 20; y = height - wmHeight - 20; }
-      if (position === 'bottom-right') { x = width - wmWidth - 20; y = height - wmHeight - 20; }
-      const offsetX = Math.max(0, Math.min(1, parseFloat(opts.offsetX || '0.5')));
-      const offsetY = Math.max(0, Math.min(1, parseFloat(opts.offsetY || '0.5')));
-      if (position === 'diagonal-left') { x = Math.round(width * offsetX); y = Math.round(height * offsetY); }
-      if (position === 'diagonal-right') { x = Math.round(width * offsetX); y = Math.round(height * offsetY); }
-      const centerX = x + wmWidth / 2;
-      const centerY = y + wmHeight / 2;
-      const transform = angle ? `transform="translate(${centerX}, ${centerY}) rotate(${angle}) translate(-${wmWidth/2}, -${wmHeight/2})"` : `x="${x}" y="${y}"`;
-      const imageTag = angle ? `<image href="data:image/png;base64,${wmBase64}" width="${wmWidth}" height="${wmHeight}" opacity="${opacity}" ${transform}/>` : `<image href="data:image/png;base64,${wmBase64}" x="${x}" y="${y}" width="${wmWidth}" height="${wmHeight}" opacity="${opacity}"/>`;
+      const { x, y } = getWatermarkPosition(position, width, height, offsetX, offsetY, wmWidth, wmHeight);
+      const transform = `translate(${x}, ${y}) rotate(${rotate}) translate(-${wmWidth / 2}, -${wmHeight / 2})`;
       overlaySvg = `<?xml version="1.0" encoding="utf-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" style="overflow:hidden">
-  ${imageTag}
+  <g transform="${transform}">
+    <image href="data:image/png;base64,${wmBase64}" width="${wmWidth}" height="${wmHeight}" opacity="${opacity}" />
+  </g>
 </svg>`;
     } else {
       // text watermark: place text in SVG sized to image
-      // position will be handled by CSS-like x/y in the SVG
       const fill = `${color}`;
       const shadow = `rgba(0,0,0,${Math.min(0.7, opacity + 0.2)})`;
-      // compute x,y per position
-      let x = '50%';
-      let y = '50%';
-      let anchor = 'middle';
-      let rotate = 0;
-      if (position === 'top-left') { x = 40; y = 60; anchor = 'start'; }
-      if (position === 'top-right') { x = width - 40; y = 60; anchor = 'end'; }
-      if (position === 'bottom-left') { x = 40; y = height - 40; anchor = 'start'; }
-      if (position === 'bottom-right') { x = width - 40; y = height - 40; anchor = 'end'; }
-      const offsetX = Math.max(0, Math.min(1, parseFloat(opts.offsetX || '0.5')));
-      const offsetY = Math.max(0, Math.min(1, parseFloat(opts.offsetY || '0.5')));
-      if (position === 'center') { x = '50%'; y = '50%'; anchor = 'middle'; }
-      if (position === 'diagonal-left') { x = Math.round(width * offsetX); y = Math.round(height * offsetY); anchor = 'start'; rotate = -45; }
-      if (position === 'diagonal-right') { x = Math.round(width * offsetX); y = Math.round(height * offsetY); anchor = 'end'; rotate = 45; }
-
+      const { x, y } = getWatermarkPosition(position, width, height, offsetX, offsetY);
+      const anchor = getTextAnchor(position);
+      const textRotation = rotate;
+      const transform = textRotation ? `transform="rotate(${textRotation}, ${x}, ${y})"` : '';
       const scaledFontSize = Math.max(1, Math.round(fontSize * scale));
-      const transform = rotate ? `transform="rotate(${rotate}, ${x}, ${y})"` : '';
+      const escapedText = escapeSvgText(text);
       overlaySvg = `<?xml version="1.0" encoding="utf-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
   <style>
     .wm { font-family: Arial, Helvetica, sans-serif; font-size: ${scaledFontSize}px; fill: ${fill}; }
     .shadow { font-family: Arial, Helvetica, sans-serif; font-size: ${scaledFontSize}px; fill: ${shadow}; }
   </style>
-  <text x="${x}" y="${y}" text-anchor="${anchor}" dominant-baseline="middle" class="shadow" ${transform}>${text}</text>
-  <text x="${x}" y="${y}" text-anchor="${anchor}" dominant-baseline="middle" class="wm" ${transform}>${text}</text>
+  <text x="${x}" y="${y}" text-anchor="${anchor}" dominant-baseline="middle" class="shadow" ${transform}>${escapedText}</text>
+  <text x="${x}" y="${y}" text-anchor="${anchor}" dominant-baseline="middle" class="wm" ${transform}>${escapedText}</text>
 </svg>`;
     }
 
