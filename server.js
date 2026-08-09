@@ -93,12 +93,13 @@ app.post('/upload', upload.fields([
       if (position === 'diagonal-left') { x = Math.round(width * offsetX); y = Math.round(height * offsetY); anchor = 'start'; rotate = -45; }
       if (position === 'diagonal-right') { x = Math.round(width * offsetX); y = Math.round(height * offsetY); anchor = 'end'; rotate = 45; }
 
+      const scaledFontSize = Math.max(1, Math.round(fontSize * scale));
       const transform = rotate ? `transform="rotate(${rotate}, ${x}, ${y})"` : '';
       overlaySvg = `<?xml version="1.0" encoding="utf-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
   <style>
-    .wm { font-family: Arial, Helvetica, sans-serif; font-size: ${fontSize}px; fill: ${fill}; }
-    .shadow { font-family: Arial, Helvetica, sans-serif; font-size: ${fontSize}px; fill: ${shadow}; }
+    .wm { font-family: Arial, Helvetica, sans-serif; font-size: ${scaledFontSize}px; fill: ${fill}; }
+    .shadow { font-family: Arial, Helvetica, sans-serif; font-size: ${scaledFontSize}px; fill: ${shadow}; }
   </style>
   <text x="${x}" y="${y}" text-anchor="${anchor}" dominant-baseline="middle" class="shadow" ${transform}>${text}</text>
   <text x="${x}" y="${y}" text-anchor="${anchor}" dominant-baseline="middle" class="wm" ${transform}>${text}</text>

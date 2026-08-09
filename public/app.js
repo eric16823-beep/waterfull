@@ -220,9 +220,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (wmFile) {
           watermarkPreview.style.display = 'flex';
           const url = URL.createObjectURL(wmFile);
-          const wmImage = await loadImageFile(wmFile);
-          const wmWidth = Math.round(wmImage.width * 0.25 * scaleValue * previewScale);
-          const wmHeight = Math.round(wmImage.height * 0.25 * scaleValue * previewScale);
+          const wmWidth = Math.round(cw * 0.25 * scaleValue);
+          const wmHeight = Math.round(ch * 0.25 * scaleValue);
           watermarkPreview.innerHTML = `<img id="previewWatermarkImg" src="${url}" style="width: ${wmWidth}px; height: ${wmHeight}px; display:block;"/>`;
         }
       }
