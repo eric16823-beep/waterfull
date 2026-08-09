@@ -39,7 +39,8 @@ app.post('/upload', upload.fields([
     const text = opts.text || 'Sample Watermark';
     const color = opts.color || '#ffffff';
 
-    const img = sharp(photoBuf).rotate();
+    const rotatedPhotoBuf = await sharp(photoBuf).rotate().toBuffer();
+    const img = sharp(rotatedPhotoBuf);
     const meta = await img.metadata();
     const width = meta.width || 800;
     const height = meta.height || 600;
@@ -69,7 +70,7 @@ app.post('/upload', upload.fields([
       const transform = angle ? `transform="translate(${centerX}, ${centerY}) rotate(${angle}) translate(-${wmWidth/2}, -${wmHeight/2})"` : `x="${x}" y="${y}"`;
       const imageTag = angle ? `<image href="data:image/png;base64,${wmBase64}" width="${wmWidth}" height="${wmHeight}" opacity="${opacity}" ${transform}/>` : `<image href="data:image/png;base64,${wmBase64}" x="${x}" y="${y}" width="${wmWidth}" height="${wmHeight}" opacity="${opacity}"/>`;
       overlaySvg = `<?xml version="1.0" encoding="utf-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
+<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" style="overflow:hidden">
   ${imageTag}
 </svg>`;
     } else {
