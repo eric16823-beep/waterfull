@@ -4,6 +4,6 @@ services:
     env: node
     branch: main
     plan: free
-    buildCommand: npm install
+    buildCommand: apt-get update && apt-get install -y fonts-noto-cjk && npm install
     startCommand: npm start
     autoDeploy: true
