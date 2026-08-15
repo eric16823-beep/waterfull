@@ -132,8 +132,8 @@ app.post('/upload', upload.fields([
       overlaySvg = `<?xml version="1.0" encoding="utf-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
   <style>
-    .wm { font-family: Arial, Helvetica, sans-serif; font-size: ${scaledFontSize}px; fill: ${fill}; }
-    .shadow { font-family: Arial, Helvetica, sans-serif; font-size: ${scaledFontSize}px; fill: ${shadow}; }
+    .wm { font-family: "Microsoft YaHei", "SimHei", "PingFang SC", Arial, sans-serif; font-size: ${scaledFontSize}px; fill: ${fill}; }
+    .shadow { font-family: "Microsoft YaHei", "SimHei", "PingFang SC", Arial, sans-serif; font-size: ${scaledFontSize}px; fill: ${shadow}; }
   </style>
   <text x="${x}" y="${y}" text-anchor="${anchor}" dominant-baseline="middle" class="shadow" ${transform}>${escapedText}</text>
   <text x="${x}" y="${y}" text-anchor="${anchor}" dominant-baseline="middle" class="wm" ${transform}>${escapedText}</text>
