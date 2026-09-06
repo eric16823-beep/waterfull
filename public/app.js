@@ -37,7 +37,11 @@ document.addEventListener('DOMContentLoaded', () => {
     previewHeading: document.getElementById('previewHeading'),
     previewHint: document.getElementById('previewHint'),
     submitButton: document.getElementById('submitButton'),
-    resetButton: document.getElementById('resetButton')
+    resetButton: document.getElementById('resetButton'),
+    photoButton: document.getElementById('photoButton'),
+    photoLabel: document.getElementById('photoLabel'),
+    watermarkImageButton: document.getElementById('watermarkImageButton'),
+    watermarkImageLabel: document.getElementById('watermarkImageLabel')
   };
   const previewCtx = previewCanvas.getContext && previewCanvas.getContext('2d');
   const defaultSettings = { scale: '1', rotate: '0', opacity: '0.5' };
@@ -59,7 +63,16 @@ document.addEventListener('DOMContentLoaded', () => {
       previewHeading: '預覽',
       previewHint: '拖曳浮水印可調整位置；使用大小與旋轉滑桿。',
       submitButton: '產生並下載',
-      resetButton: '重置'
+      resetButton: '重置',
+      chooseFile: '選擇檔案',
+      noFileChosen: '不選擇任何檔案',
+      'position-top-left': '左上',
+      'position-top-right': '右上',
+      'position-center': '置中',
+      'position-bottom-left': '左下',
+      'position-bottom-right': '右下',
+      'position-diagonal-left': '左斜',
+      'position-diagonal-right': '右斜'
     },
     en: {
       appTitle: 'Waterfull - Image Watermark',
@@ -78,6 +91,8 @@ document.addEventListener('DOMContentLoaded', () => {
       previewHint: 'Drag the watermark to adjust position; use size and rotation sliders.',
       submitButton: 'Generate & Download',
       resetButton: 'Reset',
+      chooseFile: 'Choose File',
+      noFileChosen: 'No file chosen',
       'position-top-left': 'Top Left',
       'position-top-right': 'Top Right',
       'position-center': 'Center',
@@ -103,6 +118,8 @@ document.addEventListener('DOMContentLoaded', () => {
       previewHint: '透かしをドラッグして位置を調整します。サイズと回転スライダーを使用します。',
       submitButton: '生成してダウンロード',
       resetButton: 'リセット',
+      chooseFile: 'ファイルを選択',
+      noFileChosen: 'ファイルが選択されていません',
       'position-top-left': '左上',
       'position-top-right': '右上',
       'position-center': '中央',
@@ -128,6 +145,8 @@ document.addEventListener('DOMContentLoaded', () => {
       previewHint: 'Arrastra la marca de agua para ajustar la posición; usa los deslizadores de tamaño y rotación.',
       submitButton: 'Generar y descargar',
       resetButton: 'Restablecer',
+      chooseFile: 'Elegir archivo',
+      noFileChosen: 'No se ha elegido ningún archivo',
       'position-top-left': 'Arriba izquierda',
       'position-top-right': 'Arriba derecha',
       'position-center': 'Centro',
@@ -153,6 +172,8 @@ document.addEventListener('DOMContentLoaded', () => {
       previewHint: '워터마크를 드래그하여 위치를 조정하세요. 크기 및 회전 슬라이더를 사용하세요.',
       submitButton: '생성 및 다운로드',
       resetButton: '리셋',
+      chooseFile: '파일 선택',
+      noFileChosen: '선택된 파일 없음',
       'position-top-left': '왼쪽 상단',
       'position-top-right': '오른쪽 상단',
       'position-center': '가운데',
@@ -352,6 +373,60 @@ document.addEventListener('DOMContentLoaded', () => {
     updatePreview();
   }
 
+  // File input button handlers
+  document.getElementById('photoButton').addEventListener('click', () => {
+    document.getElementById('photoInput').click();
+  });
+  document.getElementById('watermarkImageButton').addEventListener('click', () => {
+    document.getElementById('watermarkImageInput').click();
+  });
+
+  // Update file labels when files are selected
+  document.getElementById('photoInput').addEventListener('change', () => {
+    const files = document.getElementById('photoInput').files;
+    const label = document.getElementById('photoLabel');
+    if (files.length > 0) {
+      label.textContent = files[0].name;
+    } else {
+      const lang = document.querySelector('.lang-btn.selected').dataset.lang;
+      const mapping = translations[lang] || translations.zh;
+      label.textContent = mapping.noFileChosen;
+    }
+  });
+
+  document.getElementById('watermarkImageInput').addEventListener('change', () => {
+    const files = document.getElementById('watermarkImageInput').files;
+    const label = document.getElementById('watermarkImageLabel');
+    if (files.length > 0) {
+      label.textContent = files[0].name;
+    } else {
+      const lang = document.querySelector('.lang-btn.selected').dataset.lang;
+      const mapping = translations[lang] || translations.zh;
+      label.textContent = mapping.noFileChosen;
+    }
+  });
+
+  function updateType() {
+    const type = form.elements['watermarkType'].value;
+    const textInput = form.elements['text'];
+    const watermarkInput = form.elements['watermarkImage'];
+
+    if (type === 'text') {
+      textOptions.style.display = '';
+      imageOptions.style.display = 'none';
+      if (textInput) textInput.required = true;
+      if (watermarkInput) watermarkInput.required = false;
+    } else {
+      textOptions.style.display = 'none';
+      imageOptions.style.display = '';
+      if (textInput) textInput.required = false;
+      if (watermarkInput) watermarkInput.required = true;
+    }
+    const position = form.elements['position'].value;
+    setPositionDefaults(position);
+    updatePreview();
+  }
+
   form.addEventListener('change', (e) => {
     if (e.target.name === 'watermarkType') updateType();
   });
@@ -389,6 +464,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!item) return;
         if (item.tagName === 'INPUT' && item.type === 'text') {
           item.placeholder = value;
+        } else if (item.classList && item.classList.contains('file-input-button')) {
+          item.textContent = value;
+        } else if (item.classList && item.classList.contains('file-input-label')) {
+          if (key === 'photoLabel' && !form.elements['photo'].files.length) {
+            item.textContent = value;
+          } else if (key === 'watermarkImageLabel' && !form.elements['watermarkImage'].files.length) {
+            item.textContent = value;
+          }
         } else {
           item.textContent = value;
         }
@@ -409,14 +492,18 @@ document.addEventListener('DOMContentLoaded', () => {
   let dragging = false;
   let dragStart = null;
 
-  watermarkPreview.addEventListener('mousedown', (event) => {
+  watermarkPreview.addEventListener('pointerdown', (event) => {
     dragging = true;
     dragStart = { x: event.clientX, y: event.clientY };
     watermarkPreview.classList.add('dragging');
+    try {
+      watermarkPreview.setPointerCapture(event.pointerId);
+    } catch {
+    }
     event.preventDefault();
   });
 
-  window.addEventListener('mousemove', (event) => {
+  window.addEventListener('pointermove', (event) => {
     if (!dragging) return;
     const rect = previewCanvas.getBoundingClientRect();
     const dx = event.clientX - dragStart.x;
@@ -431,7 +518,7 @@ document.addEventListener('DOMContentLoaded', () => {
     updatePreview();
   });
 
-  window.addEventListener('mouseup', () => {
+  window.addEventListener('pointerup', () => {
     if (!dragging) return;
     dragging = false;
     watermarkPreview.classList.remove('dragging');

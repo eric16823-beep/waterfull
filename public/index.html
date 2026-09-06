@@ -20,7 +20,11 @@
     </div>
     <form id="form">
       <label><span id="uploadPhoto">上傳照片 (必填)</span>
-        <input type="file" name="photo" accept="image/*" required />
+        <div class="file-input-wrapper">
+          <input type="file" name="photo" accept="image/*" required id="photoInput" />
+          <button type="button" class="file-input-button" id="photoButton">選擇檔案</button>
+          <span class="file-input-label" id="photoLabel">不選擇任何檔案</span>
+        </div>
       </label>
 
       <fieldset>
@@ -97,7 +101,11 @@
 
         <div id="imageOptions" style="display:none;">
           <label><span id="uploadWatermarkImageLabel">上傳浮水印圖 (PNG 建議)</span>
-            <input type="file" name="watermarkImage" accept="image/*" />
+            <div class="file-input-wrapper">
+              <input type="file" name="watermarkImage" accept="image/*" id="watermarkImageInput" />
+              <button type="button" class="file-input-button" id="watermarkImageButton">選擇檔案</button>
+              <span class="file-input-label" id="watermarkImageLabel">不選擇任何檔案</span>
+            </div>
           </label>
         </div>
       </div>
