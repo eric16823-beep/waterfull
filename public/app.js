@@ -290,6 +290,7 @@ document.addEventListener('DOMContentLoaded', () => {
         previewCtx.translate(x, y);
         previewCtx.rotate((rotateValue * Math.PI) / 180);
         previewCtx.fillText(text, 0, 0);
+        previewCtx.globalAlpha = opacity;
         previewCtx.fillStyle = fill;
         previewCtx.fillText(text, 0, 0);
         previewCtx.setTransform(1, 0, 0, 1, 0, 0);
