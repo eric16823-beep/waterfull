@@ -600,7 +600,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    result.innerHTML = '處理中...';
+    result.innerHTML = 'Processing...';
 
     try {
       const outputCanvas = await renderOutputCanvas();
@@ -614,10 +614,10 @@ document.addEventListener('DOMContentLoaded', () => {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      result.innerHTML = `<p>完成，圖片將自動下載。若未下載請點擊下面圖片：</p><a href="${url}" download="watermarked.png"><img src="${url}" alt="result" style="max-width:100%"/></a>`;
+      result.innerHTML = `<p>Done. The image will download automatically. If it does not, click the image below:</p><a href="${url}" download="watermarked.png"><img src="${url}" alt="result" style="max-width:100%"/></a>`;
     } catch (err) {
       console.error(err);
-      result.textContent = `處理錯誤：${err.message}`;
+      result.textContent = `Processing error: ${err.message}`;
     }
   });
 
