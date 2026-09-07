@@ -1,0 +1,20 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "smartkitbox-waterfull",
+  "main": "worker.js",
+  "compatibility_date": "2026-09-07",
+  "routes": [
+    {
+      "pattern": "smartkitbox.com",
+      "custom_domain": true
+    },
+    {
+      "pattern": "www.smartkitbox.com",
+      "custom_domain": true
+    }
+  ],
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS"
+  }
+}

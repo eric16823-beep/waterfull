@@ -544,18 +544,68 @@ document.addEventListener('DOMContentLoaded', () => {
   form.elements['photo'].addEventListener('change', updatePreview);
   if (form.elements['watermarkImage']) form.elements['watermarkImage'].addEventListener('change', updatePreview);
 
+  async function renderOutputCanvas() {
+    const photoFile = form.elements['photo'].files[0];
+    const image = await loadImageFile(photoFile);
+    const canvas = document.createElement('canvas');
+    canvas.width = image.naturalWidth || image.width;
+    canvas.height = image.naturalHeight || image.height;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+    const type = form.elements['watermarkType'].value;
+    const position = form.elements['position'].value;
+    const opacity = parseFloat(form.elements['opacity'].value || '0.5');
+    const scaleValue = parseFloat(form.elements['scale'].value || '1');
+    const rotateValue = parseFloat(form.elements['rotate'].value || '0');
+    const offsetX = parseFloat(offsetXInput.value || '0.5');
+    const offsetY = parseFloat(offsetYInput.value || '0.5');
+
+    if (type === 'text') {
+      const fontSize = Math.round(parseInt(form.elements['fontSize'].value || '48', 10) * scaleValue * FONT_SIZE_MULTIPLIER);
+      const text = form.elements['text'].value || '';
+      const color = colorInput.value || '#ffffff';
+      ctx.font = `${fontSize}px "Microsoft YaHei", "PingFang SC", "Noto Sans", Arial, sans-serif`;
+      ctx.textBaseline = 'middle';
+      const textWidth = ctx.measureText(text).width;
+      const { x, y } = getPreviewPosition(position, canvas.width, canvas.height, offsetX, offsetY, textWidth, fontSize, false);
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate((rotateValue * Math.PI) / 180);
+      ctx.textAlign = getTextAlign(position);
+      ctx.fillStyle = `rgba(0,0,0,${Math.min(0.7, opacity + 0.2)})`;
+      ctx.fillText(text, 2, 2);
+      ctx.globalAlpha = opacity;
+      ctx.fillStyle = color;
+      ctx.fillText(text, 0, 0);
+      ctx.restore();
+    } else {
+      const watermarkFile = form.elements['watermarkImage'].files[0];
+      if (watermarkFile) {
+        const watermark = await loadImageFile(watermarkFile);
+        const watermarkWidth = Math.round(canvas.width * 0.25 * scaleValue);
+        const watermarkHeight = Math.round(canvas.height * 0.25 * scaleValue);
+        const { x, y } = getPreviewPosition(position, canvas.width, canvas.height, offsetX, offsetY, watermarkWidth, watermarkHeight, true);
+        ctx.save();
+        ctx.globalAlpha = opacity;
+        ctx.translate(x, y);
+        ctx.rotate((rotateValue * Math.PI) / 180);
+        ctx.drawImage(watermark, -watermarkWidth / 2, -watermarkHeight / 2, watermarkWidth, watermarkHeight);
+        ctx.restore();
+      }
+    }
+    return canvas;
+  }
+
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     result.innerHTML = '處理中...';
-    const fd = new FormData(form);
 
     try {
-      const res = await fetch('/upload', { method: 'POST', body: fd });
-      if (!res.ok) {
-        const text = await res.text();
-        throw new Error(text || `Upload failed (${res.status})`);
-      }
-      const blob = await res.blob();
+      const outputCanvas = await renderOutputCanvas();
+      const blob = await new Promise((resolve, reject) => {
+        outputCanvas.toBlob((value) => value ? resolve(value) : reject(new Error('Unable to create PNG')), 'image/png');
+      });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;

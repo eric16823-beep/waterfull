@@ -1,41 +1,39 @@
-# Waterfull — 圖片浮水印工具
+# Waterfull - 圖片浮水印工具
 
-一個簡單的 Node.js 網站，可讓你上傳照片並加入文字或圖片浮水印。參考自 https://imagemarker.app/ 功能概念。
+Waterfull 是一個使用 Cloudflare Workers 靜態託管的圖片浮水印工具。圖片處理在瀏覽器 Canvas 完成，不需要常駐後端，也不會有 Render 免費方案的休眠問題。
 
-快速上手
-
-1. 先到專案資料夾：
+## 本機開發
 
 ```powershell
 cd D:\waterfull
-```
-
-2. 安裝相依套件：
-
-```powershell
 npm install
+npm run dev
 ```
 
-3. 啟動服務：
+開啟 Wrangler 顯示的本機網址，通常是 `http://localhost:8787`。
+
+## 部署到 Cloudflare Workers
+
+第一次使用需要先登入 Cloudflare：
 
 ```powershell
-npm start
+npx wrangler login
 ```
 
-4. 開啟瀏覽器：
+部署：
 
-http://localhost:3000
+```powershell
+npm run deploy
+```
 
-說明
-- 上傳照片後可選擇文字或圖片浮水印
-- 文字可以設定內容、字型大小、位置、透明度
-- 圖片浮水印可上傳自訂影像 (建議 PNG)，透明度由滑桿控制
+`wrangler.jsonc` 會將 `public/` 設為靜態資產，`worker.js` 負責提供這些檔案。浮水印輸出使用原始圖片解析度，支援文字、圖片、位置、透明度、縮放與旋轉。
 
-注意
-- 這是簡易範例，若要投入生產請加上更完整的錯誤處理、安全檢查與限制上傳大小。
+## 自訂網域
 
-部署與廣告準備
-- 若要讓其他人使用，請把網站部署到公開主機，並使用正式域名和 HTTPS。
-- 如果要加入 Google Ads，需先申請 Google AdSense，並確保網站內容與設定符合廣告政策。
-- 建議準備隱私權政策頁面、使用條款、聯絡方式，以及合理的內容與流量限制。
-- 免費主機通常不適合長期營利網站，若要穩定營運，建議考慮付費主機或可升級的服務。
+部署完成後，在 Cloudflare Workers 的網域設定中，將 `smartkitbox.com` 和 `www.smartkitbox.com` 綁定到 `waterfull` Worker。
+
+## 注意事項
+
+- 圖片不會上傳到伺服器，會在使用者瀏覽器本機處理。
+- 最終文字字型由使用者裝置和瀏覽器提供，CJK 字型會使用系統 fallback。
+- 正式使用前仍應設定檔案大小限制，避免瀏覽器因超大圖片耗用過多記憶體。
